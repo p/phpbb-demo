@@ -69,6 +69,7 @@ if test "$phpbb_branch" = develop; then
 	)
 	# need to run under php user account for rm to work later
 	$sudo_php rsync -a --no-times "$webroot/$phpbb_branch/phpbb"/phpBB/ "$webroot/$phpbb_branch/boards/$dbname"
+	$sudo_php sh -c "cd $webroot/$phpbb_branch/boards/$dbname && php ../../phpbb/composer.phar install"
 	python <<EOT
 import owebunit
 import re
