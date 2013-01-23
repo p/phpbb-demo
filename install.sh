@@ -20,8 +20,8 @@ test -n "$webroot" || {
 $sudo_php rm -rf "$webroot"/*/boards/*
 rm -rf "$webroot"/*
 
-for phpbb_branch in develop; do
-#for phpbb_branch in develop-olympus develop; do
+#for phpbb_branch in develop; do
+for phpbb_branch in develop-olympus develop; do
 
 git cclone "$qi_repo" "$webroot/$phpbb_branch"
 git cclone "$phpbb_repo" "$webroot/$phpbb_branch/phpbb"
