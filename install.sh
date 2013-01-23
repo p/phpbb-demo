@@ -1,13 +1,8 @@
 #!/bin/sh
 
-qi_repo=/home/pie/apps/git-phpbb/quickinstall
-qi_branch=master
-phpbb_repo=/home/pie/apps/phpbb/repo
-#webroot=/var/www/demo
-webroot=/tmp/demo
-sudo_php="sudo -u php"
-
 set -e
+
+. "$1"
 
 self_dir=`dirname $0`
 
