@@ -68,7 +68,11 @@ if test "$phpbb_branch" = develop; then
 		git checkout "$phpbb_branch"
 	)
 	# need to run under php user account for rm to work later
-	$sudo_php rsync -a --no-times "$webroot/$phpbb_branch/phpbb"/phpBB/ "$webroot/$phpbb_branch/boards/$dbname"
+	# develop removes some files like search backend bits, therefore
+	# --delete and --exclude config.php to go with it
+	$sudo_php rsync -a --no-times --exclude /config.php --delete \
+		"$webroot/$phpbb_branch/phpbb"/phpBB/ \
+		"$webroot/$phpbb_branch/boards/$dbname"
 	$sudo_php sh -c "cd $webroot/$phpbb_branch/boards/$dbname && php ../../phpbb/composer.phar install"
 	python <<EOT
 import owebunit

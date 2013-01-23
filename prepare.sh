@@ -36,6 +36,8 @@ set -e
 #apt-get update
 
 apt-get install -y python-pip python-lxml
+# debian php bits
+apt-get install -y php5-xdebug
 # for building xdebug
 #apt-get install -y autoconf
 #apt-get install -yt squeeze-backports nginx
