@@ -1,0 +1,4 @@
+src_repo: /home/pie/apps/phpbb/demo
+deploy_repo: git@github.com:ur/phpbb-demo-build.git
+work_prefix: /home/appbuild/demo-deploy
+build_cmd: python build.py
