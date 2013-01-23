@@ -1,0 +1,5 @@
+- Automatic board rebuilds every hour
+- Rebuild into new boards to not destroy old boards if the rebuild fails
+- Automatic source updates
+- Check usability via wolis before updating
+- Deploy arbitrary branches
