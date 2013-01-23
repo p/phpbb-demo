@@ -4,6 +4,11 @@ set -e
 
 . "$1"
 
+test -n "$webroot" || {
+	echo "webroot must be set" 1>&2
+	exit 11
+}
+
 self_dir=`dirname $0`
 
 $sudo_php rm -rf "$webroot"/*/boards/*
@@ -29,13 +34,14 @@ for dir in boards cache; do
 done
 
 dbname=demo_`echo "$phpbb_branch" |tr - _`
-dropdb --if-exists -U qi qi_"$dbname"
+#dropdb --if-exists -U "$pg_user" qi_"$dbname"
+echo "drop database if exists qi_$dbname" |psql -U "$pg_user" postgres
 
 python <<-EOT
 	import owebunit
 	
 	s = owebunit.Session()
-	s.get('http://demo/$phpbb_branch/')
+	s.get('$url/$phpbb_branch/')
 	s.assert_status(200)
 	
 	form = s.response.form(id='create-form')
@@ -56,7 +62,7 @@ if test "$phpbb_branch" = develop; then
 		import re
 		
 		s = owebunit.Session()
-		s.get('http://demo/$phpbb_branch/boards/$dbname/install/database_update.php')
+		s.get('$url/$phpbb_branch/boards/$dbname/install/database_update.php')
 		s.assert_status(200)
 		
 		assert re.search(r'Result ::.*No errors', s.response.body)
