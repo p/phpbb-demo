@@ -79,3 +79,5 @@ echo \"alter user qi password 'TyijBetja'\" |psql
 
 cp "$self_dir"/demo.apache.conf /etc/apache2/sites-available/demo
 ln -sf ../sites-available/demo /etc/apache2/sites-enabled/demo
+
+a2enmod vhost_alias
