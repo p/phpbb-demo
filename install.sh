@@ -109,6 +109,6 @@ fi
 $sudo_php rm -rf "$webroot/$phpbb_branch/boards/$dbname/install"
 
 mkdir -p "$webroot/index"
-ln -sf "../$phpbb_branch/boards/$dbname" "$webroot/index/`echo "$dbname" |tr _ -`"
+ln -sf "../$phpbb_branch/boards/$dbname" "$webroot/index/`echo "$dbname" |tr _ - |sed -e s/^demo-//`"
 
 done
