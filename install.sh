@@ -17,21 +17,36 @@ test -n "$webroot" || {
 	exit 11
 }
 
-$sudo_php rm -rf "$webroot"/*/boards/*
-rm -rf "$webroot"/*
+#for phpbb_branch in phpbb:develop; do
+for phpbb_branch in phpbb:develop-olympus phpbb:develop; do
+#for phpbb_branch in nextgen666:develop; do
 
-#for phpbb_branch in develop; do
-for phpbb_branch in develop-olympus develop; do
+ghuser=`echo "$phpbb_branch" |sed -e 's/:.*//'`
+ghbranch=`echo "$phpbb_branch" |sed -e 's/.*://'`
+
+$sudo_php rm -rf "$webroot/$phpbb_branch"/boards/*
+rm -rf "$webroot/$phpbb_branch"
 
 git cclone "$qi_repo" "$webroot/$phpbb_branch"
-git cclone "$phpbb_repo" "$webroot/$phpbb_branch/phpbb"
-(cd "$webroot/$phpbb_branch/phpbb" &&
-	if test "$phpbb_branch" = develop; then
+git cclone git://github.com/"$ghuser"/phpbb3.git "$webroot/$phpbb_branch/phpbb"
+cd "$webroot/$phpbb_branch/phpbb" &&
+	if test "$ghbranch" = develop; then
 		git checkout release-3.0.11
+		basebranch=develop
 	else
-		git checkout origin/"$phpbb_branch"
+		git checkout origin/"$ghbranch"
+		if test "$ghbranch" = develop-olympus; then
+			basebranch=develop-olympus
+		else
+			develop_merge_count=`git shortlog |grep "Merge branch 'develop-olympus' into develop" |wc -l`
+			if test "$develop_merge_count" -gt 300; then
+				git checkout release-3.0.11
+				basebranch=develop
+			else
+				basebranch=develop-olympus
+			fi
+		fi
 	fi
-)
 ln -s ../phpbb/phpBB "$webroot/$phpbb_branch/sources/phpBB3"
 mkdir -p "$webroot/$phpbb_branch/settings"
 cp "$self_dir"/qi."$server".cfg "$webroot/$phpbb_branch/settings/"
@@ -40,7 +55,7 @@ for dir in boards cache; do
 	chmod 0777 "$webroot/$phpbb_branch/$dir"
 done
 
-dbname=demo_`echo "$phpbb_branch" |tr - _`
+dbname=demo_`echo "$phpbb_branch" |tr :- _`
 #dropdb --if-exists -U "$pg_admin_user" qi_"$dbname"
 echo "drop database if exists qi_$dbname" |psql -U "$pg_admin_user" postgres
 
@@ -63,9 +78,9 @@ except AssertionError as e:
 	exit(12)
 EOT
 
-if test "$phpbb_branch" = develop; then
+if test "$basebranch" = develop; then
 	(cd "$webroot/$phpbb_branch/phpbb" &&
-		git checkout "$phpbb_branch"
+		git checkout "$ghbranch"
 	)
 	# need to run under php user account for rm to work later
 	# develop removes some files like search backend bits, therefore
