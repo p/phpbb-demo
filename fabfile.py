@@ -28,6 +28,10 @@ def update():
     update_repo()
     run('sh -x `pwd`/phpbb-demo/install.sh vps')
 
+def install(*branches):
+    update_repo()
+    run('sh -x `pwd`/phpbb-demo/install.sh vps ' + ' '.join(branches))
+
 def build():
     update_repo()
     run('sh `pwd`/phpbb-demo/build.sh')

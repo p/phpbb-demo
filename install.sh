@@ -9,6 +9,7 @@ fi
 
 self_dir=`dirname $0`
 server="$1"
+shift
 
 . "$self_dir/$server".cfg
 
@@ -17,19 +18,31 @@ test -n "$webroot" || {
 	exit 11
 }
 
-#for phpbb_branch in phpbb:develop; do
-for phpbb_branch in phpbb:develop-olympus phpbb:develop; do
-#for phpbb_branch in nextgen666:develop; do
+if test -n "$1"; then
+	branches="$@"
+else
+	branches="phpbb:develop-olympus phpbb:develop"
+fi
+
+for phpbb_branch in $branches; do
 
 ghuser=`echo "$phpbb_branch" |sed -e 's/:.*//'`
 ghbranch=`echo "$phpbb_branch" |sed -e 's/.*://'`
 
-$sudo_php rm -rf "$webroot/$phpbb_branch"/boards/*
-rm -rf "$webroot/$phpbb_branch"
+usable_identifier() {
+	echo "$1" |sed -e s/'[^a-zA-Z0-9]/_/g'
+}
 
-git cclone "$qi_repo" "$webroot/$phpbb_branch"
-git cclone git://github.com/"$ghuser"/phpbb3.git "$webroot/$phpbb_branch/phpbb"
-cd "$webroot/$phpbb_branch/phpbb" &&
+top_dir=`usable_identifier "$phpbb_branch"`
+dbname=demo_"$top_dir"
+top_dir=`echo "$top_dir" |tr _ -`
+
+$sudo_php rm -rf "$webroot/$top_dir"/boards/*
+rm -rf "$webroot/$top_dir"
+
+git cclone "$qi_repo" "$webroot/$top_dir"
+git cclone git://github.com/"$ghuser"/phpbb3.git "$webroot/$top_dir/phpbb"
+cd "$webroot/$top_dir/phpbb" &&
 	if test "$ghbranch" = develop; then
 		git checkout release-3.0.11
 		basebranch=develop
@@ -47,15 +60,14 @@ cd "$webroot/$phpbb_branch/phpbb" &&
 			fi
 		fi
 	fi
-ln -s ../phpbb/phpBB "$webroot/$phpbb_branch/sources/phpBB3"
-mkdir -p "$webroot/$phpbb_branch/settings"
-cp "$self_dir"/qi."$server".cfg "$webroot/$phpbb_branch/settings/"
+ln -s ../phpbb/phpBB "$webroot/$top_dir/sources/phpBB3"
+mkdir -p "$webroot/$top_dir/settings"
+cp "$self_dir"/qi."$server".cfg "$webroot/$top_dir/settings/"
 for dir in boards cache; do
-	mkdir -p "$webroot/$phpbb_branch/$dir"
-	chmod 0777 "$webroot/$phpbb_branch/$dir"
+	mkdir -p "$webroot/$top_dir/$dir"
+	chmod 0777 "$webroot/$top_dir/$dir"
 done
 
-dbname=demo_`echo "$phpbb_branch" |tr :- _`
 #dropdb --if-exists -U "$pg_admin_user" qi_"$dbname"
 echo "drop database if exists qi_$dbname" |psql -U "$pg_admin_user" postgres
 
@@ -64,7 +76,7 @@ import owebunit
 
 try:
 	s = owebunit.Session()
-	s.get('$url/$phpbb_branch/')
+	s.get('$url/$top_dir/')
 	s.assert_status(200)
 
 	form = s.response.form(id='create-form')
@@ -79,23 +91,23 @@ except AssertionError as e:
 EOT
 
 if test "$basebranch" = develop; then
-	(cd "$webroot/$phpbb_branch/phpbb" &&
+	(cd "$webroot/$top_dir/phpbb" &&
 		git checkout "$ghbranch"
 	)
 	# need to run under php user account for rm to work later
 	# develop removes some files like search backend bits, therefore
 	# --delete and --exclude config.php to go with it
 	$sudo_php rsync -a --no-times --exclude /config.php --delete \
-		"$webroot/$phpbb_branch/phpbb"/phpBB/ \
-		"$webroot/$phpbb_branch/boards/$dbname"
-	$sudo_php sh -c "cd $webroot/$phpbb_branch/boards/$dbname && php ../../phpbb/composer.phar install"
+		"$webroot/$top_dir/phpbb"/phpBB/ \
+		"$webroot/$top_dir/boards/$dbname"
+	$sudo_php sh -c "cd $webroot/$top_dir/boards/$dbname && php ../../phpbb/composer.phar install"
 	python <<EOT
 import owebunit
 import re
 
 try:
 	s = owebunit.Session()
-	s.get('$url/$phpbb_branch/boards/$dbname/install/database_update.php')
+	s.get('$url/$top_dir/boards/$dbname/install/database_update.php')
 	s.assert_status(200)
 
 	assert re.search(r'Result ::.*No errors', s.response.body)
@@ -106,9 +118,9 @@ except AssertionError as e:
 EOT
 fi
 
-$sudo_php rm -rf "$webroot/$phpbb_branch/boards/$dbname/install"
+$sudo_php rm -rf "$webroot/$top_dir/boards/$dbname/install"
 
 mkdir -p "$webroot/index"
-ln -sf "../$phpbb_branch/boards/$dbname" "$webroot/index/`echo "$dbname" |tr _ - |sed -e s/^demo-//`"
+ln -sf "../$top_dir/boards/$dbname" "$webroot/index/`echo "$dbname" |tr _ - |sed -e s/^demo-//`"
 
 done
