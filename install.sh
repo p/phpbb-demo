@@ -8,8 +8,25 @@ if ! echo "$0" |grep -q /; then
 fi
 
 self_dir=`dirname $0`
-server="$1"
-shift
+
+server=
+while getopts :c: option; do
+	case $option in
+	c)
+		server="$OPTARG"
+		;;
+	*)
+		echo "Bad option $option" 1>&2
+		exit 11
+		;;
+	esac
+done
+shift $(($OPTIND - 1))
+
+if test -z "$server"; then
+	echo "Server option was not set" 1>&2
+	exit 11
+fi
 
 . "$self_dir/$server".cfg
 
@@ -18,13 +35,11 @@ test -n "$webroot" || {
 	exit 11
 }
 
-if test -n "$1"; then
-	branches="$@"
-else
-	branches="phpbb:develop-olympus phpbb:develop"
+phpbb_branch="$1"
+if test -z "$phpbb_branch"; then
+	echo "branch argument not given" 1>&2
+	exit 11
 fi
-
-for phpbb_branch in $branches; do
 
 ghuser=`echo "$phpbb_branch" |sed -e 's/:.*//'`
 ghbranch=`echo "$phpbb_branch" |sed -e 's/.*://'`
@@ -122,5 +137,3 @@ $sudo_php rm -rf "$webroot/$top_dir/boards/$dbname/install"
 
 mkdir -p "$webroot/index"
 ln -sf "../$top_dir/boards/$dbname" "$webroot/index/`echo "$dbname" |tr _ - |sed -e s/^demo-//`"
-
-done
