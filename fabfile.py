@@ -21,20 +21,16 @@ def update_repo():
     ]))
 
 def setup():
-    put('prepare.sh', '.')
-    put('requirements.txt', '.')
-    #put('php-fpm.conf', '.')
-    put('php.ini', '.')
-    put('demo.apache.conf', '.')
-    run('sudo sh `pwd`/prepare.sh')
+    update_repo()
+    run('sudo sh `pwd`/phpbb-demo/prepare.sh')
 
 def update():
     update_repo()
     run('sh -x `pwd`/phpbb-demo/install.sh vps')
 
 def build():
-    put('build.sh', '.')
-    run('sh build.sh')
+    update_repo()
+    run('sh `pwd`/phpbb-demo/build.sh')
 
 def restart():
     run('sudo /etc/init.d/apache2 restart')

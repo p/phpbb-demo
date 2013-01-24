@@ -1,7 +1,5 @@
 #!/bin/sh
 
-base=/home/deploy
-
 # pre-setup:
 
 if false; then
@@ -32,6 +30,13 @@ fi
 
 set -e
 
+if ! echo "$0" |grep -q /; then
+	echo "Please invoke with a path" 1>&2
+	exit 10
+fi
+
+self_dir=`dirname $0`
+
 #echo 'deb http://backports.debian.org/debian-backports squeeze-backports main' >/etc/apt/sources.list.d/backports.list
 #apt-get update
 
@@ -42,7 +47,7 @@ apt-get install -y php5-xdebug
 #apt-get install -y autoconf
 #apt-get install -yt squeeze-backports nginx
 pip install git-cachecow
-pip install -r "$base"/requirements.txt --upgrade
+pip install -r "$self_dir"/requirements.txt --upgrade
 
 mkdir -p /var/www/demo
 chown deploy:deploy /var/www/demo
@@ -63,14 +68,14 @@ echo \"alter user qi password 'TyijBetja'\" |psql
 "
 
 #mkdir -p /etc/php55
-#cp "$base"/php-fpm.conf /etc/php55
-#cp "$base"/php.ini /etc/php55
+#cp "$self_dir"/php-fpm.conf /etc/php55
+#cp "$self_dir"/php.ini /etc/php55
 
 #mkdir -p /var/log/php
 #chown www-data:www-data /var/log/php
 
-#cp "$base"/demo.nginx.conf /etc/nginx/sites-available/demo
+#cp "$self_dir"/demo.nginx.conf /etc/nginx/sites-available/demo
 #ln -sf ../sites-available/demo /etc/nginx/sites-enabled/demo
 
-cp "$base"/demo.apache.conf /etc/apache2/sites-available/demo
+cp "$self_dir"/demo.apache.conf /etc/apache2/sites-available/demo
 ln -sf ../sites-available/demo /etc/apache2/sites-enabled/demo
