@@ -9,9 +9,13 @@ fi
 
 self_dir=`dirname $0`
 
+branch=
 server=
-while getopts :c: option; do
+while getopts b:c: option; do
 	case $option in
+	b)
+		branch="$OPTARG"
+		;;
 	c)
 		server="$OPTARG"
 		;;
@@ -35,12 +39,19 @@ test -n "$webroot" || {
 	exit 11
 }
 
-phpbb_branch="$1"
-if test -z "$phpbb_branch"; then
-	echo "branch argument not given" 1>&2
+name="$1"
+if test -z "$name"; then
+	echo "name argument not given" 1>&2
 	exit 11
 fi
 
+if test -n "$branch"; then
+	phpbb_branch="$branch"
+else
+	phpbb_branch="$name"
+fi
+
+echo "$phpbb_branch" |grep -q :
 ghuser=`echo "$phpbb_branch" |sed -e 's/:.*//'`
 ghbranch=`echo "$phpbb_branch" |sed -e 's/.*://'`
 
@@ -48,7 +59,7 @@ usable_identifier() {
 	echo "$1" |sed -e s/'[^a-zA-Z0-9]/_/g'
 }
 
-top_dir=`usable_identifier "$phpbb_branch"`
+top_dir=`usable_identifier "$name"`
 dbname=demo_"$top_dir"
 top_dir=`echo "$top_dir" |tr _ -`
 
@@ -136,4 +147,4 @@ fi
 $sudo_php rm -rf "$webroot/$top_dir/boards/$dbname/install"
 
 mkdir -p "$webroot/index"
-ln -sf "../$top_dir/boards/$dbname" "$webroot/index/`echo "$dbname" |tr _ - |sed -e s/^demo-//`"
+ln -nsf "../$top_dir/boards/$dbname" "$webroot/index/`echo "$dbname" |tr _ - |sed -e s/^demo-//`"

@@ -26,13 +26,17 @@ def setup():
 
 def update():
     update_repo()
-    run('sh -x `pwd`/phpbb-demo/install.sh -c vps develop-olympus')
-    run('sh -x `pwd`/phpbb-demo/install.sh -c vps develop')
+    run('sh -x `pwd`/phpbb-demo/install.sh -c vps phpbb:develop-olympus')
+    run('sh -x `pwd`/phpbb-demo/install.sh -c vps phpbb:develop')
 
 def install(*branches):
     update_repo()
     for branch in branches:
         run('sh -x `pwd`/phpbb-demo/install.sh -c vps %s' % branch)
+
+def ispec(spec):
+    update_repo()
+    run('sh -x `pwd`/phpbb-demo/spec/%s.sh -c vps' % spec)
 
 def build():
     update_repo()
