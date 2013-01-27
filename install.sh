@@ -70,7 +70,6 @@ git cclone "$qi_repo" "$webroot/$top_dir"
 git cclone git://github.com/"$ghuser"/phpbb3.git "$webroot/$top_dir/phpbb"
 cd "$webroot/$top_dir/phpbb" &&
 	if test "$ghbranch" = develop; then
-		git checkout release-3.0.11
 		basebranch=develop
 	else
 		git checkout origin/"$ghbranch"
@@ -79,12 +78,15 @@ cd "$webroot/$top_dir/phpbb" &&
 		else
 			develop_merge_count=`git shortlog |grep "Merge branch 'develop-olympus' into develop" |wc -l`
 			if test "$develop_merge_count" -gt 300; then
-				git checkout release-3.0.11
 				basebranch=develop
 			else
 				basebranch=develop-olympus
 			fi
 		fi
+	fi
+	if test "$basebranch" = develop; then
+		git remote add upstream git://github.com/phpbb/phpbb3 -f
+		git checkout release-3.0.11
 	fi
 ln -s ../phpbb/phpBB "$webroot/$top_dir/sources/phpBB3"
 mkdir -p "$webroot/$top_dir/settings"
@@ -95,7 +97,7 @@ for dir in boards cache; do
 done
 
 #dropdb --if-exists -U "$pg_admin_user" qi_"$dbname"
-echo "drop database if exists qi_$dbname" |psql -U "$pg_admin_user" postgres
+echo "drop database if exists qi_$dbname" |sudo -u postgres psql
 
 python <<EOT
 import owebunit

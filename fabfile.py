@@ -1,5 +1,5 @@
 from fabric.api import *
-import time, os.path
+import time, os.path, re
 
 env.shell = '$SHELL -c'
 
@@ -33,6 +33,10 @@ def install(*branches):
     update_repo()
     for branch in branches:
         run('sh -x `pwd`/phpbb-demo/install.sh -c vps %s' % branch)
+    for branch in branches:
+        name = re.sub(r'[^a-zA-Z0-9]', '-', branch).lower()
+        name = re.sub(r'-+', '-', name)
+        print('Installed branch: http://%s.demo.hxr.me' % name)
 
 def ispec(spec):
     update_repo()
